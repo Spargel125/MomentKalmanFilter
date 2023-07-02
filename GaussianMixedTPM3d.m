@@ -44,6 +44,19 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = S(obj)
             e = sin(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3));
         end
+        function e = CS(obj)
+            e = 0.5*sin(2*obj.Mu(3))*exp(-0.5*4*obj.Sigma2(3,3));
+        end
+        function e = SC(obj)
+            e = obj.CS;
+        end
+        function e = C2(obj)
+            e = 0.5*(cos(2*obj.Mu(3))*exp(-0.5*4*obj.Sigma2(3,3))+1);
+        end
+        function e = S2(obj)
+            e = 0.5*(1-cos(2*obj.Mu(3))*exp(-0.5*4*obj.Sigma2(3,3)));
+        end
+
         function e = X2(obj)
             % E[x^2]
             e = obj.Sigma2(1,1)+obj.Mu(1)^2;
