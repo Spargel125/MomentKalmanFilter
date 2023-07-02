@@ -38,7 +38,12 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = Th(obj)
             e = obj.Mu(3);
         end
-
+        function e = C(obj)
+            e = cos(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3));
+        end
+        function e = S(obj)
+            e = sin(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3));
+        end
         function e = XC(obj)
             % calc E[(x*cos(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
