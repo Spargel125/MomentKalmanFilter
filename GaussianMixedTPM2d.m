@@ -34,7 +34,8 @@ classdef GaussianMixedTPM2d < GaussianTPM
         function e = XTh(obj)
             % E[x*theta]
             if obj.Sigma2(1,2)==0 %２変数が独立の場合，それぞれの積で計算する．
-                e = obj.Mu(1)+obj.Mu(2);
+                e = obj.Mu(1)...
+                    *obj.Mu(2);
             else
                 [T11,T12,T21,T22,y1,y2,~] = variableExpansion(obj);
                 e = T11*T21*y1.X2+(T11*T22+T12*T21)*y1.X*y2.X+T12*T22*y2.X2;
@@ -43,7 +44,8 @@ classdef GaussianMixedTPM2d < GaussianTPM
         end
         function e = XC(obj)
             if obj.Sigma2(1,2)==0 %２変数が独立の場合，それぞれの積で計算する．
-                e = obj.Mu(1)*(cos(obj.Mu(1))*exp(-0.5*obj.Sigma2(2,2)));
+                e = obj.Mu(1)...
+                    *(cos(obj.Mu(2))*exp(-0.5*obj.Sigma2(2,2)));
             else
             % E[x*cos(theta)]
             [T11,T12,T21,T22,~,~,l1,l2,~] = variableExpansion(obj);
@@ -52,13 +54,23 @@ classdef GaussianMixedTPM2d < GaussianTPM
         end
         function e = XS(obj)
             % E[x*sin(theta)]
+            if obj.Sigma2(1,2)==0 %２変数が独立の場合，それぞれの積で計算する．
+                e = obj.Mu(1)...
+                    *(sin(obj.Mu(2))*exp(-0.5*obj.Sigma2(2,2)));
+            else
             [T11,T12,T21,T22,~,~,l1,l2,~] = variableExpansion(obj);
             e = T11/T21*(l1.XSinX*l2.CosX+l1.XCosX*l2.SinX)+T12/T22*(l1.SinX*l2.XCosX+l1.CosX*l2.XSinX);
+            end
         end
         function e = XCS(obj)
             % E[x*cos(theta)*sin(theta)]
+            if obj.Sigma2(1,2)==0 %２変数が独立の場合，それぞれの積で計算する．
+                e = obj.Mu(1)...
+                    *(0.5*sin(2*obj.Mu(2))*exp(-0.5*4*obj.Sigma2(2,2)));
+            else
             [T11,T12,T21,T22,~,~,~,~,m1,m2] = variableExpansion(obj);
             e = T11/(4*T21)*(m1.XSinX*m2.CosX+m1.XCosX*m2.SinX)+T12/(4*T22)*(m1.SinX*m2.XCosX+m1.CosX*m2.XSinX);
+            end
         end
 
         function [T11,T12,T21,T22,y1,y2,l1,l2,m1,m2] = variableExpansion(obj)
