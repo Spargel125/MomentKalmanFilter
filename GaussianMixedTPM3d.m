@@ -29,6 +29,16 @@ classdef GaussianMixedTPM3d < GaussianTPM
                 obj.Z33 = GaussianTPM(T33*mu_y3,(T33^2)*lambda3);
             end
         end
+        function e = X(obj)
+            e = obj.Mu(1);
+        end
+        function e = Y(obj)
+            e = obj.Mu(2);
+        end
+        function e = Th(obj)
+            e = obj.Mu(3);
+        end
+
         function e = XC(obj)
             % calc E[(x*cos(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
@@ -81,7 +91,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
             % calc E[(x*x*cos(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
                 e = (obj.Sigma2(1,1)+obj.Mu(1)^2)...
-                *(cos(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                    *(cos(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
             else
                 [T11,T12,T13,~,~,~,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e =  (T11/T31)^2*(z31.X2CosX*z32.CosX*z33.CosX-z31.X2CosX*z32.SinX*z33.SinX-z31.X2SinX*z32.CosX*z33.SinX-z31.X2SinX*z32.SinX*z33.CosX)...
