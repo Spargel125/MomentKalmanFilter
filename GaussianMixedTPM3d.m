@@ -52,6 +52,36 @@ classdef GaussianMixedTPM3d < GaussianTPM
             % E[y^2]
             e = obj.Sigma2(2,2)+obj.Mu(2)^2;
         end
+        function e = XY(obj)
+            if obj.Sigma2(1,2)==0
+                e = obj.Mu(1)*obj.Mu(2);
+            else
+                [T11,T12,T13,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
+                e = (T11/T31)*((T21/T31)*z31.X2+(T22/T32)*z31.X*z32.X+(T23/T33)*z31.X*z33.X)...
+                    +(T12/T32)*((T21/T31)*z31.X*z32.X+(T22/T32)*z32.X2+(T23/T33)*z32.X*z33.X)...
+                    +(T13/T33)*((T21/T31)*z33.X*z31.X+(T22/T32)*z33.X*z32.X+(T23/T33)*z33.X2);
+            end
+        end
+        function e = XTh(obj)
+            if obj.Sigma2(1,3)==0
+                e = obj.Mu(1)*obj.Mu(3);
+            else
+                [T11,T12,T13,~,~,~,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
+                e = (T11/T31)*(z31.X2+z31.X*z32.X+z31.X*z33.X)...
+                    +(T12/T32)*(z31.X*z32.X+z32.X2+z32.X*z33.X)...
+                    +(T13/T33)*(z33.X*z31.X+z33.X*z32.X+z33.X2);
+            end
+        end
+        function e = YTh(obj)
+            if obj.Sigma2(2,3)==0
+                e = obj.Mu(2)*obj.Mu(3);
+            else
+                [~,~,~,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
+                e = (T21/T31)*(z31.X2+z31.X*z32.X+z31.X*z33.X)...
+                    +(T22/T32)*(z31.X*z32.X+z32.X2+z32.X*z33.X)...
+                    +(T23/T33)*(z33.X*z31.X+z33.X*z32.X+z33.X2);
+            end
+        end
 
         function e = XC(obj)
             % calc E[(x*cos(theta))]
