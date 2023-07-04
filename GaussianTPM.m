@@ -47,5 +47,15 @@ classdef GaussianTPM
             % E[x^2 sinx]
             e =((obj.sigma2+obj.mu^2-obj.sigma2^2)*sin(obj.mu)+2*obj.mu*obj.sigma2*cos(obj.mu))*exp(-0.5*obj.sigma2);
         end 
+        function e = CosXSinX(obj)
+                e = 0.5*sin(2*obj.mu)*exp(-0.5*4*obj.sigma2);
+        end
+        function e = Cos2X(obj)
+            e = 0.5*(cos(2*obj.mu)*exp(-0.5*4*obj.sigma2)+1);
+        end
+        function e = Sin2X(obj)
+            e = 0.5*(1-cos(2*obj.mu)*exp(-0.5*4*obj.sigma2));
+        end
+
     end
 end

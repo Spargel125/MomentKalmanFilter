@@ -1,6 +1,7 @@
 classdef GaussianMixedTPM3d < GaussianTPM
     properties
         Mu,Sigma2
+        x,y,th
         T,Lambda
         Z31,Z32,Z33
     end
@@ -27,59 +28,71 @@ classdef GaussianMixedTPM3d < GaussianTPM
                 obj.Z31 = GaussianTPM(T31*mu_y1,(T31^2)*lambda1);
                 obj.Z32 = GaussianTPM(T32*mu_y2,(T32^2)*lambda2);
                 obj.Z33 = GaussianTPM(T33*mu_y3,(T33^2)*lambda3);
+                obj.x = GaussianTPM(obj.Mu(1),obj.Sigma2(1,1));
+                obj.y = GaussianTPM(obj.Mu(2),obj.Sigma2(2,2));
+                obj.th = GaussianTPM(obj.Mu(3),obj.Sigma2(3,3));
             end
         end
         function e = X(obj)
-            e = obj.Mu(1);
+            e = obj.x.X;
         end
         function e = Y(obj)
-            e = obj.Mu(2);
+            e = obj.y.X;
         end
         function e = Th(obj)
-            e = obj.Mu(3);
+            e = obj.th.X;
         end
         function e = C(obj)
-            e = cos(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3));
+            e = obj.th.CosX;
         end
         function e = S(obj)
-            e = sin(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3));
+            e = obj.th.SinX;
         end
         function e = CS(obj)
-            e = 0.5*sin(2*obj.Mu(3))*exp(-0.5*4*obj.Sigma2(3,3));
+            %             e = 0.5*sin(2*obj.Mu(3))*exp(-0.5*4*obj.Sigma2(3,3));
+            e = obj.th.CosXSinX;
         end
         function e = SC(obj)
-            e = obj.CS;
+            e = obj.th.CosXSinX;
         end
         function e = C2(obj)
-            e = 0.5*(cos(2*obj.Mu(3))*exp(-0.5*4*obj.Sigma2(3,3))+1);
+            %             e = 0.5*(cos(2*obj.Mu(3))*exp(-0.5*4*obj.Sigma2(3,3))+1);
+            e = obj.th.Cos2X;
         end
         function e = S2(obj)
-            e = 0.5*(1-cos(2*obj.Mu(3))*exp(-0.5*4*obj.Sigma2(3,3)));
+            %             e = 0.5*(1-cos(2*obj.Mu(3))*exp(-0.5*4*obj.Sigma2(3,3)));
+            e = obj.th.Sin2X;
         end
 
         function e = X2(obj)
             % E[x^2]
-            e = obj.Sigma2(1,1)+obj.Mu(1)^2;
+            %             e = obj.Sigma2(1,1)+obj.Mu(1)^2;
+            e = obj.x.X2;
         end
         function e = Y2(obj)
             % E[y^2]
-            e = obj.Sigma2(2,2)+obj.Mu(2)^2;
+            %             e = obj.Sigma2(2,2)+obj.Mu(2)^2;
+            e = obj.y.X2;
         end
         function e = Th2(obj)
             % E[y^2]
-            e = obj.Sigma2(3,3)+obj.Mu(3)^2;
+            %             e = obj.Sigma2(3,3)+obj.Mu(3)^2;
+            e = obj.th.X2;
         end
 
         function e = ThC(obj)
-            e = (obj.Mu(3)*cos(obj.Mu(3))-obj.Sigma2(3,3)*sin(obj.Mu(3))) * exp(-0.5*obj.Sigma2(3,3));
+            %             e = (obj.Mu(3)*cos(obj.Mu(3))-obj.Sigma2(3,3)*sin(obj.Mu(3))) * exp(-0.5*obj.Sigma2(3,3));
+            e = obj.th.XCosX;
+
         end
         function e = ThS(obj)
-            e = (obj.Mu(3)*sin(obj.Mu(3))+obj.Sigma2(3,3)*cos(obj.Mu(3))) * exp(-0.5*obj.Sigma2(3,3));
+            %             e = (obj.Mu(3)*sin(obj.Mu(3))+obj.Sigma2(3,3)*cos(obj.Mu(3))) * exp(-0.5*obj.Sigma2(3,3));
+            e = obj.th.XSinX;
         end
 
         function e = XY(obj)
             if obj.Sigma2(1,2)==0
-                e = obj.Mu(1)*obj.Mu(2);
+                e = obj.x.X*obj.y.X;
             else
                 [T11,T12,T13,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e = (T11/T31)*((T21/T31)*z31.X2+(T22/T32)*z31.X*z32.X+(T23/T33)*z31.X*z33.X)...
@@ -89,7 +102,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         end
         function e = XTh(obj)
             if obj.Sigma2(1,3)==0
-                e = obj.Mu(1)*obj.Mu(3);
+                e = obj.x.X*obj.th.X;
             else
                 [T11,T12,T13,~,~,~,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e = (T11/T31)*(z31.X2+z31.X*z32.X+z31.X*z33.X)...
@@ -99,7 +112,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         end
         function e = YTh(obj)
             if obj.Sigma2(2,3)==0
-                e = obj.Mu(2)*obj.Mu(3);
+                e = obj.y.X*obj.th.X;
             else
                 [~,~,~,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e = (T21/T31)*(z31.X2+z31.X*z32.X+z31.X*z33.X)...
@@ -111,8 +124,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = XC(obj)
             % calc E[(x*cos(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = obj.Mu(1)...
-                    *(cos(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.x.X*obj.th.CosX;
             else
                 [T11,T12,T13,~,~,~,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e =  (T11/T31)*(z31.XCosX*z32.CosX*z33.CosX-z31.XCosX*z32.SinX*z33.SinX-z31.XSinX*z32.CosX*z33.SinX-z31.XSinX*z32.SinX*z33.CosX)...
@@ -123,8 +135,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = XS(obj)
             % calc E[(x*sin(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = obj.Mu(1)...
-                    *(sin(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.x.X*obj.th.SinX;
             else
                 [T11,T12,T13,~,~,~,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e =  (T11/T31)*(-z31.XSinX*z32.SinX*z33.SinX+z31.XSinX*z32.CosX*z33.CosX+z31.XCosX*z32.SinX*z33.CosX+z31.XCosX*z32.CosX*z33.SinX)...
@@ -135,8 +146,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = YC(obj)
             % calc E[(y*cos(theta))]
             if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = obj.Mu(2)...
-                    *(cos(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.y.X*obj.th.CosX;
             else
                 [~,~,~,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e =  (T21/T31)*(z31.XCosX*z32.CosX*z33.CosX-z31.XCosX*z32.SinX*z33.SinX-z31.XSinX*z32.CosX*z33.SinX-z31.XSinX*z32.SinX*z33.CosX)...
@@ -147,8 +157,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = YS(obj)
             % calc E[(y*sin(theta))]
             if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = obj.Mu(2)...
-                    *(sin(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.y.X*obj.th.SinX;
             else
                 [~,~,~,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e =  (T21/T31)*(-z31.XSinX*z32.SinX*z33.SinX+z31.XSinX*z32.CosX*z33.CosX+z31.XCosX*z32.SinX*z33.CosX+z31.XCosX*z32.CosX*z33.SinX)...
@@ -159,8 +168,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = X2C(obj)
             % calc E[(x*x*cos(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = (obj.Sigma2(1,1)+obj.Mu(1)^2)...
-                    *(cos(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.x.X2*obj.th.CosX;
             else
                 [T11,T12,T13,~,~,~,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e =  (T11/T31)^2*(z31.X2CosX*z32.CosX*z33.CosX-z31.X2CosX*z32.SinX*z33.SinX-z31.X2SinX*z32.CosX*z33.SinX-z31.X2SinX*z32.SinX*z33.CosX)...
@@ -174,8 +182,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = X2S(obj)
             % calc E[(x*x*sin(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = (obj.Sigma2(1,1)+obj.Mu(1)^2)...
-                    *(sin(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.x.X2*obj.th.SinX;
             else
                 [T11,T12,T13,~,~,~,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e =  (T11/T31)^2*(-z31.X2SinX*z32.SinX*z33.SinX+z31.X2SinX*z32.CosX*z33.CosX+z31.X2CosX*z32.SinX*z33.CosX+z31.X2CosX*z32.CosX*z33.SinX)...
@@ -189,8 +196,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = Y2C(obj)
             % calc E[(y*y*cos(theta))]
             if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = (obj.Sigma2(2,2)+obj.Mu(2)^2)...
-                    *(cos(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.y.X2*obj.th.CosX;
             else
                 [~,~,~,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e =  (T21/T31)^2*(z31.X2CosX*z32.CosX*z33.CosX-z31.X2CosX*z32.SinX*z33.SinX-z31.X2SinX*z32.CosX*z33.SinX-z31.X2SinX*z32.SinX*z33.CosX)...
@@ -204,8 +210,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = Y2S(obj)
             % calc E[(y*y*sin(theta))]
             if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = (obj.Sigma2(2,2)+obj.Mu(2)^2)...
-                    *(sin(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.y.X2*obj.th.SinX;
             else
                 [~,~,~,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e =  (T21/T31)^2*(-z31.X2SinX*z32.SinX*z33.SinX+z31.X2SinX*z32.CosX*z33.CosX+z31.X2CosX*z32.SinX*z33.CosX+z31.X2CosX*z32.CosX*z33.SinX)...
@@ -219,9 +224,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = XYC(obj)
             % calc E[(x*y*cos(theta))]
             if isdiag(obj.Sigma2) == true %Sigma2が対角→x,y,thetaが独立
-                e = (obj.Mu(1))...
-                    *(obj.Mu(2))...
-                    *(cos(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.x.X*obj.y.X*obj.th.CosX;
             else
                 [T11,T12,T13,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e = (T11/T31)*(T21/T31)*(z31.X2CosX*z32.CosX*z33.CosX-z31.X2CosX*z32.SinX*z33.SinX-z31.X2SinX*z32.CosX*z33.SinX-z31.X2SinX*z32.SinX*z33.CosX)...
@@ -235,9 +238,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = XYS(obj)
             % calc E[(x*y*sin(theta))]
             if isdiag(obj.Sigma2) == true %Sigma2が対角→x,y,thetaが独立
-                e = (obj.Mu(1))...
-                    *(obj.Mu(2))...
-                    *(sin(obj.Mu(3))*exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.x.X*obj.y.X*obj.th.SinX;
             else
                 [T11,T12,T13,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e = (T11/T31)*(T21/T31)*(-z31.X2SinX*z32.SinX*z33.SinX+z31.X2SinX*z32.CosX*z33.CosX+z31.X2CosX*z32.SinX*z33.CosX+z31.X2CosX*z32.CosX*z33.SinX)...
@@ -251,8 +252,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e=XThC(obj)
             % calc E[(x*theta*cos(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = obj.Mu(1)...
-                    *((obj.Mu(3)*cos(obj.Mu(3))-obj.Sigma2(3,3)*sin(obj.Mu(3))) * exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.x.X*obj.th.XCosX;
             else
                 [T11,T12,T13,~,~,~,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e = (T11/T31)*(z31.X2CosX*z32.CosX*z33.CosX-z31.X2CosX*z32.SinX*z33.SinX-z31.X2SinX*z32.CosX*z33.SinX-z31.X2SinX*z32.SinX*z33.CosX)...
@@ -266,10 +266,8 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e=XThS(obj)
             % calc E[(x*theta*sin(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = obj.Mu(1)...
-                    *((obj.Mu(3)*sin(obj.Mu(3))+obj.Sigma2(3,3)*cos(obj.Mu(3))) * exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.x.X*obj.th.XSinX;
             else
-
                 [T11,T12,T13,~,~,~,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e = (T11/T31)*(-z31.X2SinX*z32.SinX*z33.SinX+z31.X2SinX*z32.CosX*z33.CosX+z31.X2CosX*z32.SinX*z33.CosX+z31.X2CosX*z32.CosX*z33.SinX)...
                     +(T12/T32)*(-z31.SinX*z32.X2SinX*z33.SinX+z31.SinX*z32.X2CosX*z33.CosX+z31.CosX*z32.X2SinX*z33.CosX+z31.CosX*z32.X2CosX*z33.SinX)...
@@ -282,8 +280,7 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e=YThC(obj)
             % calc E[(y*theta*cos(theta))]
             if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = obj.Mu(2)...
-                    *((obj.Mu(3)*cos(obj.Mu(3))-obj.Sigma2(3,3)*sin(obj.Mu(3))) * exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.y.X*obj.th.XCosX;
             else
 
                 [~,~,~,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
@@ -298,10 +295,8 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e=YThS(obj)
             % calc E[(y*theta*sin(theta))]
             if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
-                e = obj.Mu(2)...
-                    *((obj.Mu(3)*sin(obj.Mu(3))+obj.Sigma2(3,3)*cos(obj.Mu(3))) * exp(-0.5*obj.Sigma2(3,3)));
+                e = obj.y.X*obj.th.XSinX;
             else
-
                 [~,~,~,T21,T22,T23,T31,T32,T33,z31,z32,z33] = variableExpansion(obj);
                 e = (T21/T31)*(-z31.X2SinX*z32.SinX*z33.SinX+z31.X2SinX*z32.CosX*z33.CosX+z31.X2CosX*z32.SinX*z33.CosX+z31.X2CosX*z32.CosX*z33.SinX)...
                     +(T22/T32)*(-z31.SinX*z32.X2SinX*z33.SinX+z31.SinX*z32.X2CosX*z33.CosX+z31.CosX*z32.X2SinX*z33.CosX+z31.CosX*z32.X2CosX*z33.SinX)...
