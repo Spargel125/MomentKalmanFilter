@@ -65,6 +65,10 @@ classdef GaussianMixedTPM3d < GaussianTPM
             % E[y^2]
             e = obj.Sigma2(2,2)+obj.Mu(2)^2;
         end
+        function e = Th2(obj)
+            % E[y^2]
+            e = obj.Sigma2(3,3)+obj.Mu(3)^2;
+        end
 
         function e = ThC(obj)
             e = (obj.Mu(3)*cos(obj.Mu(3))-obj.Sigma2(3,3)*sin(obj.Mu(3))) * exp(-0.5*obj.Sigma2(3,3));
