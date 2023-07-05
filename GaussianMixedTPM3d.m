@@ -199,6 +199,19 @@ classdef GaussianMixedTPM3d < GaussianTPM
                 e = (1/4)*(tmp.X-tmp.XC);
             end
         end
+        function e = XCS(obj)
+            % calc E[(x*cos(theta)*sin(theta)]=E[x*sin(2theta)/2]
+            if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
+                e = obj.x.X*obj.th.CosXSinX;
+            else
+                %x=2x,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/4)*(tmp.XS);
+            end
+        end
+        function e = XSC(obj)
+            e = obj.XCS;
+        end
         function e = YCC(obj)
             % calc E[(y*cos^2(theta))]=E[y*(cos(2theta)+1)/2]
             if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
@@ -219,6 +232,20 @@ classdef GaussianMixedTPM3d < GaussianTPM
                 e = (1/4)*(tmp.Y-tmp.YC);
             end
         end
+            function e = YCS(obj)
+            % calc E[(y*cos(theta)*sin(theta)]=E[y*sin(2theta)/2]
+            if obj.Sigma2(2,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
+                e = obj.y.X*obj.th.CosXSinX;
+            else
+                %y=2y,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/4)*(tmp.YS);
+            end
+        end
+        function e = YSC(obj)
+            e = obj.YCS;
+        end
+
         function e = XXCC(obj)
             % calc E[(x*x*cos^2(theta))]=E[x*x*(cos(2theta)+1)/2]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
