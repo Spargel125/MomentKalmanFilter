@@ -179,6 +179,47 @@ classdef GaussianMixedTPM3d < GaussianTPM
                     +2*(T13/T33)*(T11/T31)*(z31.XCosX*z32.CosX*z33.XCosX-z31.XCosX*z32.SinX*z33.XSinX-z31.XSinX*z32.CosX*z33.XSinX-z31.XSinX*z32.SinX*z33.XCosX);
             end
         end
+        function e = XXCC(obj)
+            % calc E[(x*x*cos^2(theta))]=E[x*x*(cos(2theta)+1)/2]
+            if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
+                e = obj.x.X2*obj.th.Cos2X;
+            else
+                %x=2x,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/8)*(tmp.X2+tmp.X2C);
+            end
+        end
+        function e = XXSS(obj)
+            % calc E[(x*x*sin^2(theta))]=E[x*x*(1-cos(2theta))/2]
+            if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
+                e = obj.x.X2*obj.th.Sin2X;
+            else
+                %x=2x,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/8)*(tmp.X2-tmp.X2C);
+            end
+        end
+        function e = YYCC(obj)
+            % calc E[(y*y*cos^2(theta))]=E[y*y*(cos(2theta)+1)/2]
+            if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
+                e = obj.y.X2*obj.th.Cos2X;
+            else
+                %x=2x,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/8)*(tmp.Y2+tmp.Y2C);
+            end
+        end
+        function e = YYSS(obj)
+            % calc E[(y*y*sin^2(theta))]=E[y*y*(1-cos(2theta))/2]
+            if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
+                e = obj.y.X2*obj.th.Sin2X;
+            else
+                %x=2x,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/8)*(tmp.Y2-tmp.Y2C);
+            end
+        end
+        
         function e = X2S(obj)
             % calc E[(x*x*sin(theta))]
             if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
