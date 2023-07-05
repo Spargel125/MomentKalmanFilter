@@ -212,6 +212,20 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = XSC(obj)
             e = obj.XCS;
         end
+        function e = XXCS(obj)
+            % calc E[(xx*cos(theta)*sin(theta)]=E[xx*sin(2theta)/2]
+            if obj.Sigma2(1,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
+                e = obj.x.X2*obj.th.CosXSinX;
+            else
+                %x=2x,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/8)*(tmp.X2S);
+            end
+        end
+        function e = XXSC(obj)
+            e = obj.XXCS;
+        end
+
         function e = YCC(obj)
             % calc E[(y*cos^2(theta))]=E[y*(cos(2theta)+1)/2]
             if obj.Sigma2(2,3) == 0 % yとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
@@ -245,6 +259,19 @@ classdef GaussianMixedTPM3d < GaussianTPM
         function e = YSC(obj)
             e = obj.YCS;
         end
+        function e = YYCS(obj)
+            % calc E[(yy*cos(theta)*sin(theta)]=E[yy*sin(2theta)/2]
+            if obj.Sigma2(2,3) == 0 % xとθの共分散が0→独立なのでそれぞれの確率モーメントの積で返す
+                e = obj.y.X2*obj.th.CosXSinX;
+            else
+                %y=2y,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/8)*(tmp.Y2S);
+            end
+        end
+        function e = YYSC(obj)
+            e = obj.YYCS;
+        end
 
         function e = XYCS(obj)
             % calc E[(x*y*cos(theta)*sin(theta)]=E[x*y*sin(2theta)/2]
@@ -258,6 +285,26 @@ classdef GaussianMixedTPM3d < GaussianTPM
         end
         function e = XYSC(obj)
             e = obj.XYCS;
+        end
+        function e = XYCC(obj)
+            % calc E[(xy*cos^2(theta))]=E[xy*(cos(2theta)+1)/2]
+            if isdiag(obj.Sigma2) == true %Sigma2が対角→x,y,thetaが独立
+                e = obj.x.X*obj.y.X*obj.th.Cos2X;
+            else
+                %x=2x,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/8)*(tmp.XY+tmp.XYC);
+            end
+        end
+        function e = XYSS(obj)
+            % calc E[(xy*sin^2(theta))]=E[xy*(1-cos(2theta))/2]
+            if isdiag(obj.Sigma2) == true %Sigma2が対角→x,y,thetaが独立
+                e = obj.x.X*obj.y.X*obj.th.Sin2X;
+            else
+                %x=2x,theta=2thetaと置きなおして再帰的に呼び出す
+                tmp = GaussianMixedTPM3d(2*obj.Mu,4*obj.Sigma2);
+                e = (1/8)*(tmp.XY-tmp.XYC);
+            end
         end
 
         function e = XXCC(obj)
