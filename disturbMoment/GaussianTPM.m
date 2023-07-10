@@ -19,41 +19,41 @@ classdef GaussianTPM
         function e = X(obj)
             e = obj.mu;
         end
-        function e = X2(obj)
+        function e = XX(obj)
             % E[x^2]
             e = obj.sigma2+obj.mu^2;
         end
-        function e = CosX(obj)
+        function e = C(obj)
             % E[cosx]
             e = cos(obj.mu)*exp(-0.5*obj.sigma2);
         end
-        function e = SinX(obj)
+        function e = S(obj)
             % E[sinx]
             e = sin(obj.mu)*exp(-0.5*obj.sigma2);
         end
-        function e = XCosX(obj)
+        function e = XC(obj)
             % E[xcosx]
             e = (obj.mu*cos(obj.mu)-obj.sigma2*sin(obj.mu)) * exp(-0.5*obj.sigma2);
         end
-        function e = XSinX(obj)
+        function e = XS(obj)
             % E[xsinx]
             e = (obj.mu*sin(obj.mu)+obj.sigma2*cos(obj.mu)) * exp(-0.5*obj.sigma2);
         end 
-        function e = X2CosX(obj)
+        function e = XXC(obj)
             % E[x^2 cosx]
             e = ((obj.sigma2+obj.mu^2-obj.sigma2^2)*cos(obj.mu)-2*obj.mu*obj.sigma2*sin(obj.mu))*exp(-0.5*obj.sigma2);
         end 
-        function e = X2SinX(obj)
+        function e = XXS(obj)
             % E[x^2 sinx]
             e =((obj.sigma2+obj.mu^2-obj.sigma2^2)*sin(obj.mu)+2*obj.mu*obj.sigma2*cos(obj.mu))*exp(-0.5*obj.sigma2);
         end 
-        function e = CosXSinX(obj)
+        function e = CS(obj)
                 e = 0.5*sin(2*obj.mu)*exp(-0.5*4*obj.sigma2);
         end
-        function e = Cos2X(obj)
+        function e = CC(obj)
             e = 0.5*(cos(2*obj.mu)*exp(-0.5*4*obj.sigma2)+1);
         end
-        function e = Sin2X(obj)
+        function e = SS(obj)
             e = 0.5*(1-cos(2*obj.mu)*exp(-0.5*4*obj.sigma2));
         end
 
