@@ -1,3 +1,7 @@
+
+% compute E[f(x)],x~N(mu sigma2)
+% input: mu(3-dimention vector),sigma (3*3 matrix)
+
 classdef GaussianMixedTPM3d < GaussianTPM
     properties
         Mu,Sigma2
