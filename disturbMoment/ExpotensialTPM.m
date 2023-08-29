@@ -39,5 +39,18 @@ classdef ExpotensialTPM
             % E[x^2 sinx]
             e =(2*obj.lambda)*(3*obj.lambda^2-1)/(obj.lambda^2+1)^3;
         end
+        function e = CS(obj)
+            % E[cosxsinx]
+            e = obj.lambda/(obj.lambda^2+4);
+        end
+        function e = CC(obj)
+            % E[cosxcosx]
+            e = 0.5*(obj.lambda^2/(obj.lambda^2+4)+1);
+        end
+        function e = SS(obj)
+            % E[sinxsinx]
+            e = 0.5*(1-obj.lambda^2/(obj.lambda^2+4));
+        end
+
     end
 end
